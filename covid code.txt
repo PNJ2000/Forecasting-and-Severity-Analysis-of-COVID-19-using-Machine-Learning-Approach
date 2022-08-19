@@ -1,0 +1,201 @@
+Import Lib
+
+import warnings
+warnings.filterwarnings("ignore")
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+%matplotlib inline
+
+df = pd.read_csv("complete.csv")
+df.head()
+df.tail()
+df.isna().sum()
+f['Name of State / UT'].unique()
+df.shape
+
+#select one state
+sta = ['Karnataka']
+df1 = df[df['Name of State / UT']==sta[0]]
+
+df1.head()
+df1.tail()
+df1.shape
+df1.reset_index(drop=True,inplace=True)
+df1.head()
+df1.tail()
+df2 = df1[['Date','Total Confirmed cases']]
+df2.head()
+df2.describe()
+
+plt.figure(figsize=(18,8))
+df2.plot.line(x = 'Date', y = 'Total Confirmed cases',figsize=(18,8))
+plt.show()
+
+df2.plot.hist(x = 'Date', y = 'Total Confirmed cases', figsize=(18,8))
+plt.show()
+
+from statsmodels.tsa.ar_model import AR
+
+X = df2['Total Confirmed cases'].values
+print(len(X))
+
+X = np.log(X)
+#plt.plot(X)
+
+train, test = X[0:X.shape[0]-30], X[X.shape[0]-30:]
+
+print(train)
+
+print(test)
+
+# train autoregression
+model = AR(train)
+
+model_fit = model.fit()
+
+# make predictions
+predictions = model_fit.predict(start=len(train), end=len(train)+29, dynamic=True)
+
+test
+predictions
+
+from sklearn.metrics import mean_squared_error,r2_score
+
+mse = mean_squared_error(test, predictions)
+print('MSE: %f' % mse)
+
+from math import sqrt
+rmse = sqrt(mse)
+print('RMSE: %f' % rmse)
+
+print(rmse)
+
+print('Accuracy Score',1-rmse)
+Y = df2['Date']
+years = Y[len(train):]
+len(predictions)
+
+plt.figure(figsize=(18,8))
+plt.plot(years, predictions, label='Predicted')
+plt.plot(years, test, label='Actual')
+
+
+
+# Geo Map Covid Status 
+
+# import dataset
+
+import json
+import numpy as np
+import pandas as pd
+import plotly.express as px
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+import plotly.io as pio
+pio.renderers.default = 'browser'
+
+# Read data and stats coratinate
+
+india_states = json.load(open("states_india.geojson", "r"))
+
+# we reading each stat id
+
+state_id_map = {}
+for feature in india_states["features"]:
+    feature["id"] = feature["properties"]["state_code"]
+    state_id_map[feature["properties"]["st_nm"]] = feature["id"]
+
+state_id_map
+
+df = pd.read_csv("complete.csv")
+
+df.head()
+
+state_id_map['Delhi'] = state_id_map.pop('NCT of Delhi')
+
+state_id_map.pop('Daman & Diu')
+
+df1 = df[['Name of State / UT','Total Confirmed cases']]
+
+df1.head()
+
+new_states = state_id_map.keys()
+
+new_states
+
+states = df1['Name of State / UT'].unique()
+
+states = list(states)
+
+states = sorted(states)
+new_states = sorted(new_states)
+
+# new_states.remove('Daman & Diu','NCT of Delhi')
+
+for i in range(len(new_states)):
+    print(states[i],"----",new_states[i])
+
+case_count = []
+state = []
+
+for i in states:
+    n = df1[df1['Name of State / UT']==i]['Total Confirmed cases'].sum()
+    case_count.append(n)
+    state.append(i)
+
+len(case_count)
+
+len(state)
+
+# Create the dataset for ploting
+
+data = {'State':new_states,
+        'cases':case_count}
+  
+# Create DataFrame
+df3 = pd.DataFrame(data)
+
+df3["id"] = df3["State"].apply(lambda x: state_id_map[x])
+
+df3.head()
+
+# Density for Color 
+
+df3["DensityScale"] = np.log10(df3["cases"])
+
+fig = px.choropleth(
+    df3,
+    locations="id",
+    geojson=india_states,
+    color="DensityScale",
+    hover_name="State",
+    hover_data=["cases"],
+    title="India Covid Cases",
+)
+fig.update_geos(fitbounds="locations", visible=False)
+fig.show()
+
+fig.write_html('first_figure1.html', auto_open=True)
+
+fig = px.choropleth_mapbox(
+    df3,
+    locations="id",
+    geojson=india_states,
+    color="DensityScale",
+    hover_name="State",
+    hover_data=["cases"],
+    title="India Covid Cases",
+    mapbox_style="carto-positron",
+    center={"lat": 24, "lon": 78},
+    zoom=3,
+    opacity=0.5,
+)
+fig.show()
+
+fig.write_html('first_figure.html2', auto_open=True)
+
+# End...
