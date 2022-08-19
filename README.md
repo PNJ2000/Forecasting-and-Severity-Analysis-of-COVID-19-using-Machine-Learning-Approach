@@ -1,0 +1,2 @@
+# Forecasting-and-Severity-Analysis-of-COVID-19-using-Machine-Learning-Approach
+This paper focused on the coronavirus pandemic situation in the global and Karnataka region and its related effects and future status. This project proposing two algorithms, i.e., Linear Regression algorithm and Clustering algorithm along with ARIMA model and forecasting model to measure the affirmed, recuperated, and passing cases. Finally, the comparison and analysis of different models and algorithms successfully showed our visualization and prediction success.
